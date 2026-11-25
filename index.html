@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080d18">
+<title>StudyLock</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;background:#080d18;color:white;
+ font-family:Arial,sans-serif;display:flex;align-items:center;
+ justify-content:center;text-align:center;padding:24px
+}
+main{width:100%;max-width:420px}
+h1{letter-spacing:6px;font-size:28px}
+p{color:#94a3b8}
+#timer{font-size:clamp(48px,15vw,76px);font-weight:700;
+ font-variant-numeric:tabular-nums;margin:55px 0 20px}
+select,button{
+ padding:15px;border-radius:13px;border:1px solid #334155;
+ background:#17243a;color:white;font-size:16px;margin:5px
+}
+select{width:100%}
+.primary{background:#a7f3c0;color:#102018;font-weight:bold}
+#status{color:#a7f3c0;margin:25px}
+</style>
+</head>
+<body>
+<main>
+ <h1>STUDYLOCK</h1>
+ <p>Your personal focus space</p>
+
+ <select id="duration">
+  <option value="25">25 minutes</option>
+  <option value="50">50 minutes</option>
+  <option value="90">90 minutes</option>
+  <option value="120" selected>2 hours</option>
+  <option value="180">3 hours</option>
+ </select>
+
+ <div id="timer">02:00:00</div>
+ <div id="status">READY TO FOCUS</div>
+
+ <button class="primary" id="start">START STUDY</button>
+ <button id="pause" disabled>PAUSE</button>
+ <button id="reset">RESET</button>
+
+ <p>One session. One goal. Full focus.</p>
+</main>
+
+<script>
+const timer=document.getElementById("timer");
+const duration=document.getElementById("duration");
+const status=document.getElementById("status");
+const start=document.getElementById("start");
+const pause=document.getElementById("pause");
+const reset=document.getElementById("reset");
+
+let remaining=7200;
+let endAt=0;
+let running=false;
+let interval=null;
+
+function display(){
+ let s=Math.max(0,Math.ceil(remaining));
+ let h=String(Math.floor(s/3600)).padStart(2,"0");
+ let m=String(Math.floor((s%3600)/60)).padStart(2,"0");
+ let sec=String(s%60).padStart(2,"0");
+ timer.textContent=h+":"+m+":"+sec;
+}
+
+function tick(){
+ if(!running)return;
+ remaining=Math.max(0,(endAt-Date.now())/1000);
+ display();
+ if(remaining<=0){
+  running=false;
+  clearInterval(interval);
+  status.textContent="SESSION COMPLETE!";
+  start.disabled=false;
+  pause.disabled=true;
+  if(navigator.vibrate)navigator.vibrate([300,150,300]);
+ }
+}
+
+start.onclick=()=>{
+ if(running)return;
+ if(remaining<=0)remaining=Number(duration.value)*60;
+ endAt=Date.now()+remaining*1000;
+ running=true;
+ status.textContent="FOCUS IN PROGRESS";
+ start.disabled=true;
+ pause.disabled=false;
+ clearInterval(interval);
+ interval=setInterval(tick,250);
+ tick();
+};
+
+pause.onclick=()=>{
+ tick();
+ running=false;
+ clearInterval(interval);
+ status.textContent="PAUSED";
+ start.disabled=false;
+ pause.disabled=true;
+};
+
+reset.onclick=()=>{
+ running=false;
+ clearInterval(interval);
+ remaining=Number(duration.value)*60;
+ display();
+ status.textContent="READY TO FOCUS";
+ start.disabled=false;
+ pause.disabled=true;
+};
+
+duration.onchange=()=>{
+ if(!running){
+  remaining=Number(duration.value)*60;
+  display();
+ }
+};
+
+display();
+</script>
+</body>
+</html>
